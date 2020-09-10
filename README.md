@@ -1,7 +1,5 @@
 # Solving task allocation problem in multi Unmanned Aerial Vehicles systems using Swarm intelligence
 
-Project Description
-----------------------------------------
 This project provides a simulation for the task allocation problem among UAVs. 
 It was implemented in NetLogo (version 5.3.1).
 
@@ -14,7 +12,7 @@ It has four different task allocation algorithms:
 
 Publication
 -------------
- - Schwarzrock, J., Zacarias, I., Bazzan, A. L., de Araujo Fernandes, R. Q., Moreira, L. H., and de Freitas, E. P. (2018). Solving task allocation problem in multi unmanned aerial vehicles systems using swarm intelligence. Engineering Applications of Artificial Intelligence, 72, 10-20.
+ - Schwarzrock, J., Zacarias, I., Bazzan, A. L., de Araujo Fernandes, R. Q., Moreira, L. H., and de Freitas, E. P. (2018). Solving task allocation problem in multi unmanned aerial vehicles systems using swarm intelligence. Engineering Applications of Artificial Intelligence, 72, 10-20. https://doi.org/10.1016/j.engappai.2018.03.008
 
 
 How to use
