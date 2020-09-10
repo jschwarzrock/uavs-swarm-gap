@@ -1,6 +1,6 @@
-# uavs-swarm-gap
+# Solving task allocation problem in multi Unmanned Aerial Vehicles systems using Swarm intelligence
 
-Solving task allocation problem in multi Unmanned Aerial Vehicles systems using Swarm intelligence
+Project Description
 ----------------------------------------
 This project provides a simulation for the task allocation problem among UAVs. 
 It was implemented in NetLogo (version 5.3.1).
