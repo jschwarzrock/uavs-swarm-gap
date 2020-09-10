@@ -1,0 +1,107 @@
+;; ---------------------------------------------------
+;; ----- ALGORITMO SWARM-GAP ORIGINAL ----------------
+;; ---------------------------------------------------
+
+
+;; ---------------------------------------------------
+;; ---- Escolha das tarefas ----------
+;; ---------------------------------------------------
+
+;; O agente i (uav) verifica todas as tarefas disponíveis
+;; e calcula a probabilidade de realizar cada uma delas
+
+;; A capacidade precisa ser calculada para cada tarefa... pq é mudada a próxima posição...
+to choose_task[i]
+
+  ;; Como ele pode escolher mais de uma tarefa.. existe uma espécia de agendamento: calcula-se o custo estimado e a proxima posição
+  let r ([resource] of i - [estimated_cost] of i) ;; Recursos disponíveis (recursos atuais - consumo previsto com base em tarefas agendadas)
+
+  ;; --------------------------------------------------
+  let capacidades compute_capacidades i ;; calcular capacidade para cada uma das tarefas
+  
+  
+  foreach capacidades[
+    let j   item 0 ? ;; Tarefa
+    let kij item 1 ? ;; Capacidade
+    
+    ;; calcular o recurso necessário para a realização da tarefa (consumo de recurso da tarefa + recurso locomoção do agente até ela)
+    let Dij compute_distance i j ;; Distância
+    let consumo ([rc] of j + Dij)
+  
+    ;; Calculando a tendência para realização da tarefa (de acordo com a capacidade ij e o estimulo da tarefa):
+    let sj [s] of j ;; Estimulo da tarefa
+    let threshold 1 - kij ;; line 16 Swarm-GAP
+    let T ((sj * sj) / ((sj * sj) + (threshold * threshold))) ;; Calculo da tendência
+
+    let roulette random-float 1
+
+    ;; Verifica se o agente irá ou não fazer a tarefas:
+    if (roulette < T) and (r >= consumo) [
+        allocate i j consumo kij
+        set r (r - consumo)
+    ]
+  ]
+  
+end
+
+to-report compute_capacidades[i]
+  let dados []
+  let maxQ 0
+  let maxD 0
+
+  ;; Primeiro calcular distância e qualidade para cada uma das tarefas
+  ;; só para as tarefas que estão disponível (ainda não foram alocada para ninguém):
+  ask tasks with [responsibleAgent = false][
+
+      let q compute_quality i a      ;; Calcular a qualidade do agente para detectar o alvo solicitado pela tarefa
+
+      ;;se o agente tiver qualidade 0 significa que os seus sensores não conseguem detectar o alvo solicitado pela tarefa
+      ;; então ele não pode executa-la
+      if q > 0 [ ;; Só irá incluir as tarefas que o agente tiver qualidade para detectar
+
+        let dij compute_distance i self ;; Calcular distância entre o agente e a tarefa
+
+        if dij > maxD [set maxD dij]
+        if q   > maxQ [set maxQ q]
+
+        ;; Armazenar distância e qualidades calculadas
+        let info[]
+        set info fput self  info ;; item 0 - tarefa
+        set info lput dij   info ;; item 1 - distancia
+        set info lput q     info ;; item 2 - qualidade
+
+        set dados lput info dados
+      ]
+  ]
+
+  let capacidades []
+  ;; Agora que já tenho as distâncias do agente com cada tarefa e a maior distância
+  ;; Bem como a qualidade do agente para detectar o alvo solicitado pela tarefa e a maior qualidade
+  ;; Posso calcular a capacidade do agente para cada tarefa...
+  foreach dados[
+
+    let infoij ?
+    let j item 0 infoij ;; é a tarefa
+
+    ;show word "Tarefa: "    item 0 infoij ;; é a tarefa
+    ;show word "Distância: " item 1 infoij ;; é a distância
+    ;show word "Qualidade: " item 2 infoij ;; é a qualidade
+
+    let kd ( (maxD - item 1 infoij) / maxD)        ;; é a distância
+    let kq (1 - ( (maxQ - item 2 infoij) / maxQ))  ;; é a qualidade
+
+    let xa [alpha] of j
+    let xb (1 - [alpha] of j)
+    let kij ((kd * xa) + (kq * xb)) ;; Calcula a capacidade com base na distancia e qualidade, ponderadas pelo alpha da tarefa
+
+
+    ;; montando array com informacoes calculadas
+    let k[]
+    set k lput j                 k ;; informando a Tarefa                                         (item 0)
+    set k lput (precision kij 4) k ;; informando a capacidade do agente para realizar a tarefa    (item 1)
+
+    set capacidades lput k capacidades
+  ]
+
+  report capacidades
+end

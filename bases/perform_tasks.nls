@@ -1,0 +1,101 @@
+to move
+  ask uavs with [resource > 0][
+    ifelse (taskDoing != 0) [ ; Verifica se está fazendo alguma tarefa
+        set estimated_cost ( round (estimated_cost - 1))
+
+        ifelse (taskDoingTime = 0) ;; ainda está se movendo em direção à tarefa
+          [  
+            walk self
+              ;set log_run (word "\n tick: " ticks " agente " self " esta se movendo para tarefa: " taskDoing)
+              ;ask taskDoing[
+              ;  set deslocado deslocado + 1
+              ;]
+              
+              if ((round xcor) = [xcor] of taskDoing) and ((round ycor) = [ycor] of taskDoing) 
+                 ;; Chegou na tarefa.. proxima vez vai fazer a tarefa
+                 [ set taskDoingTime [rc] of taskDoing 
+                     ;set log_run (word log_run "\n tick: " ticks " agente " self " chegou na tarefa: " taskDoing " custo para chegar: " [deslocado] of taskDoing)
+                     ;set log_run (word log_run "\n agente está na posição: [" xcor " , " ycor  "]" )
+                     ;set log_run (word log_run "\n estimated_cost: " (estimated_cost + 1) " resource: " resource" rc tarefa: " taskDoingTime " \n" )
+                 ] ;; verifica se chegou na taferfa, se chegou: colocar que precisa passar determinado tempo fazendo a tarefa
+                 
+              
+            ]
+
+           [ ;; Já chegou ao local da tarefa e está realizando ela
+             set taskDoingTime (taskDoingTime - 1)
+             if (taskDoingTime = 0)[ finishTask self ] ;; Se terminou de realizar a tarefa, colocar como concluída
+           ]
+
+     ][ifelse not empty? tasksToDo[ ;; se não está fazendo uma tarefa precisa colocar uma para ser feita
+         doTask self
+         set estimated_cost ( round (estimated_cost - 1)) ;; reduz do custo estimado, pois é estimado o custo para ele se direcionar para a tarefa
+     ][
+         walk self ]] ;; se não esta fazendo tarefa e não tem tarefa agendada, só move...
+
+    set resource (round (resource - 1)) ;; reduz energia
+    ;set label (word "[id: " who "] [s: " sensors "] [r: " resource "]")
+    set label (word "s: " sensors " r: " resource)
+    if (resource = 0) [
+      set color red
+    ]
+     
+    ;; Atualizando a ultima posição, quando o agente não tem tarefa agendada ou não está fazendo nenhuma..
+    ;; Se o agente não tem nenhuma tarefa alocada, e não está fazendo nenhuma, então a utima posição recebe a atual
+    ;; pois assim que ele alocar uma tarefa ele já vai faze-la
+    ;; empty? tasksToDo -->  nao tem tarefa alocada
+    ;; taskDoing = 0    -->  nao está executando nenhuma tarefa       
+    if empty? tasksToDo and taskDoing = 0[
+       set lastX xcor
+       set lastY ycor
+       ;set log_run (word log_run "\n tick: " ticks " agente " self " nova posicao last [" xcor " , " ycor  "]")
+    ]
+
+  ]
+end
+
+to walk [i]
+  ask i [
+    ifelse (can-move? 1)
+    [ fd 1 ];; mover
+    [ let r random 360 ;; ou so mudar a direcao (porque encalhou na parede)
+      set heading r]
+  ]
+end
+
+to doTask [i] ;; Colocar a tarefa como fazendo e direcionar o Vant para a tarefa
+  ask i [
+      set taskDoing first tasksToDo                    ;; Pegar a primeira tarefas
+      facexy [xcor] of taskDoing [ycor] of taskDoing   ;; Direcionar o Vants para a tarefa
+      set tasksToDo remove taskDoing tasksToDo         ;; Remover de tarefas a fazer (tasksToDo)
+      set taskDoingTime 0
+      
+      ;set log_run (word log_run "\n tick: " ticks " agente " self " esta indo fazer a tarefas " taskDoing)
+      ;set log_run (word log_run "\n agente está na posição: [" xcor " , " ycor  "] \n" )
+      
+      
+      ;ask taskDoing[
+      ;   set deslocado 1 ;; já contando o se virar
+      ;]
+  ]
+end
+
+to finishTask [i] ;; Marcar tarefa como concluída
+  ask i [
+     let j taskDoing
+
+     set taskDoing 0 ;; Nao esta fazendo nenhuma tarefa, pois acabou de concluir a que estava fazendo
+     set completedTasks lput j completedTasks ;; adicionar em tarefas concluidas (completedTasks)
+
+     ask j[
+       hide-turtle          ;; Esconder a tarefa (??? Ou devemos remove-la ?)
+       set completed true   ;; Colocar tarefa como concluída
+     ]
+
+     let l link-with j
+     if (is-link? l) [
+        ask l [ hide-link ] ;; Escondendo o link, para não ficar a linha perdida
+     ]
+  ]
+end
+

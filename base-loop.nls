@@ -1,0 +1,13 @@
+;; ---------------------------------------------------
+;;    Base para algoritmos com loop
+;;    Aqui ele carrega novamente os agentes caso todos já tenham sido visitados
+;;    E tem critário de parada, com verificação de disponibilidade
+;; ---------------------------------------------------
+
+to aloca
+  let i swarm-GAP
+
+  ;; Adicionado a mais nesta versão:
+  verifica-disponibilidade i                             ;; Verifcar se o agente tem recurso, se não tiver o agente é tirada da lista de recarregamento
+  if (length uavs-unvisited = 0)[ fill-uavs-unvisited ]  ;; Carrega novamente a lista de Agentes não visitados
+end

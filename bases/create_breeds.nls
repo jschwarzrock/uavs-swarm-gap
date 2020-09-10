@@ -1,0 +1,103 @@
+;; Dedendência do arquivo: "input.nls" - pois contem matriz dos dados de tarefas e vants
+
+;; Configura as tarefas como no exemplo dos slides...
+to setup-task-fixed [indice taks-datas]
+
+  ;; Pegar matriz de tarefas
+  ;let taks-datas get_tasks[1] ;; carrega os dados das tarefas
+  
+  ;; Criar tarefas
+  create-tasks length taks-datas ;; num-threats ;;
+     [set size 5
+      set shape "x"
+      set label-color black
+      set label who
+	  set responsibleAgent false
+	  set completed false
+     ]
+  
+  ;; Como as tarefas foram criadas ap�s os Vants...  
+  ;; ent�o o indice da primeira tarefa inicia depois do �ltomo UAV
+  ;; let indice count uavs (vem como par�metro)
+
+  ;; Configurar tarefas com os dados da matriz
+  foreach taks-datas 
+     [ 
+       ask taskj indice [
+         set a  item 0 ? ;; tipo de alvo
+         set color (recolor a) + 2 ;; cor do alvo de acordo com o tipo
+         setxy (item 1 ?) (item 2 ?)
+         set label a
+         set rc item 3 ? ; Recurso consumido
+		     set s item 4 ?  ; Estimulo
+		     set timeout item 5 ? ; timeout
+		     set alpha item 6 ?   ; alpha
+         ;set alpha peso_distancia  
+		 
+		     ;set label (word "[id: " who "] [a: " a "] rc [" rc "]")
+         set label (word "a: " a)
+      ]
+      set indice indice + 1 
+     ]
+end
+
+to setup-uavs-fixed[uavs-datas]
+  ;; Pegar matriz de Vants
+  ;let uavs-datas get_uavs;; carrega Vants dispon�veis
+  
+  ; Create UAVs
+  create-uavs length uavs-datas ;num-uavs 
+     [set size 5
+      set color black
+      set label-color black
+      set shape "airplane"
+      set tasksToDo[] 
+      set completedTasks[]
+      set taskDoing 0	 
+      set estimated_cost 0
+      ;set rc-last-completed-task 0
+	  ]
+
+  ;; Configurar uavs criados com dados da matriz
+  let indice 0
+  foreach uavs-datas 
+     [ ask uav indice [
+         set resource item 0 ?
+         set sensors item 1 ?
+         setxy (item 2 ?) (item 3 ?)
+         ;set label who
+		     set label sensors
+		     set lastX xcor
+		     set lastY ycor 
+		 
+		     ;set label (word "[id: " who "] [sensors: " sensors "] r [" resource "]")
+;         set label (word "s: " sensors )
+         set label (word "s: " sensors " r: " resource)
+      ]
+     set indice indice + 1 
+     ]
+end
+
+to setup-tasks-random
+  ask tasks [
+    set a random (length item 0 quality-sensors) ;; s�o 4 tipos de alvos
+    set color (recolor a) + 2
+    set xcor random-xcor
+    set ycor random-ycor
+    set label a
+  ]
+end
+
+
+to setup-uavs-random
+  ask uavs [
+    ;; Preenchendo os Vants com o exemplo do slide     
+    set resource 100
+    set sensors [1]
+    ;set capabilities [0.5 0.7 0.85]
+    ;; Visual
+    setxy random-xcor random-ycor
+    ;;set label word "S-type: " sensor-type
+    ;set label capabilities
+  ]
+end

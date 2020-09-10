@@ -1,0 +1,559 @@
+;; --------------------------------------------------
+;; --------- Execuções sequenciais ------------------
+;; ----------   Vários cenários  --------------------
+;; --------------------------------------------------
+
+to run-n-times-all
+  run-n-times-all-3i-300r
+  ;run-n-times-all-custo-computacional
+  ;run-n-times-all-escalabilidade
+end
+
+
+to run-n-times-all-escalabilidade
+
+  print_cabecalho_inicial
+  
+  let estimulo 0.6
+  let tarefas_aleatorias 2 ;; execução com tarefas que não sao aleatoria, sao fixas - MAS JA PASSO A LISTA DE TAREFAS E DE AGENTES
+  
+  ;; ------------------------------------------------------
+  ;; vou fazer todos com este tamanho de cenário
+  let x 750
+  let y 750
+  
+  ;;
+  let quant_uavs      100
+  let quant_recurso   300
+  let quant_tarefas   500
+  let list_tarefas get_tasks_500_750x750
+  let list_agentes get_100_uavs_750x750
+  
+  print_cabecalho_por_cenario quant_tarefas quant_uavs quant_recurso
+  run-n-times_config_com_ini quant_tarefas estimulo tarefas_aleatorias quant_recurso quant_uavs x y list_tarefas list_agentes
+
+
+  ;; no mesmo cenário mas aumentado o recurso disponível (tempo para completar a missao)
+  set quant_recurso   1000
+  
+  print_cabecalho_por_cenario quant_tarefas quant_uavs quant_recurso
+  run-n-times_config_com_ini quant_tarefas estimulo tarefas_aleatorias quant_recurso quant_uavs x y list_tarefas list_agentes
+
+end
+
+to run-n-times-all-custo-computacional
+  
+  print_cabecalho_inicial
+  
+  let estimulo 0.6
+  let tarefas_aleatorias 0 ;; execução com tarefas que não sao aleatoria, sao fixas
+  let quant_recurso   300
+  
+  ;; cenário pequeno
+  let x 100
+  let y 80
+  let quant_uavs      3
+  let quant_tarefas   32
+  print_cabecalho_por_cenario quant_tarefas quant_uavs quant_recurso
+  run-n-times_config quant_tarefas estimulo tarefas_aleatorias quant_recurso quant_uavs x y
+  
+  ;; cenário medio
+  set x 200
+  set y 160
+  set quant_uavs      6
+  set quant_tarefas   64
+  print_cabecalho_por_cenario quant_tarefas quant_uavs quant_recurso
+  run-n-times_config quant_tarefas estimulo tarefas_aleatorias quant_recurso quant_uavs x y
+  
+  
+  ;; cenario grande 
+  set x 300
+  set y 240
+  set quant_uavs      9
+  set quant_tarefas   96
+  print_cabecalho_por_cenario quant_tarefas quant_uavs quant_recurso
+  run-n-times_config quant_tarefas estimulo tarefas_aleatorias quant_recurso quant_uavs x y
+
+end
+
+to run-n-times-all-3i-300r
+  ;; Testar com mais agentes... 
+  ;; testar com mais tarefas e mais recurso...
+
+  ;let list_estimulos [0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0]
+  let list_estimulos [0.6]
+  
+  print_cabecalho_inicial
+  let tarefas_aleatorias 0 ;; execução com tarefas que não sao aleatoria, sao fixas
+  
+  ; Configuração para todos:
+  let quant_uavs      3
+  let quant_recurso 300
+  let x 100
+  let y 80
+
+  ;; Cenário 1 - pouca tarefa, muita energia e cada vant (ou seja se um quisesse fazer tudo ele poderia..)
+  let quant_tarefas   4
+  print_cabecalho_por_cenario quant_tarefas quant_uavs quant_recurso ;; quant_tarefas quant_vants energia
+  foreach list_estimulos[ run-n-times_config  quant_tarefas ? tarefas_aleatorias quant_recurso quant_uavs x y] ;; quant_tarefas estimulo aleatoria energia quant_agentes
+  
+  ;; Cenário 2 - mais tarefa, muita energia e cada vant (ou seja se um quisesse poderia fazer qause tudo)
+  set quant_tarefas   8
+  print_cabecalho_por_cenario quant_tarefas quant_uavs quant_recurso ;; quant_tarefas quant_vants energia
+  foreach list_estimulos[ run-n-times_config  quant_tarefas ? tarefas_aleatorias quant_recurso quant_uavs x y]
+  
+  ;; Cenário 3 - muita tarefa e menos energia
+  set quant_tarefas   16
+  print_cabecalho_por_cenario quant_tarefas quant_uavs quant_recurso
+  foreach list_estimulos[ run-n-times_config quant_tarefas ? tarefas_aleatorias quant_recurso quant_uavs x y]
+
+  ;; Cenário 3 - muita, muita tarefa e menos energia
+  set quant_tarefas   32
+  print_cabecalho_por_cenario quant_tarefas quant_uavs quant_recurso
+  foreach list_estimulos[ run-n-times_config quant_tarefas ? tarefas_aleatorias quant_recurso quant_uavs x y]
+end
+
+
+;; --------------------------------------------------
+;; --------- Execuções sequenciais ------------------
+;; --------------------------------------------------
+to run-n-times
+  run-n-times_config 16 0.2 1 300 3 100 80
+end
+
+to run-n-times_config[quant_tarefas estimulo aleatoria energia_uav quant_uavs x y]
+ run-n-times_config_com_ini quant_tarefas estimulo aleatoria energia_uav quant_uavs x y [] []
+end
+
+to run-n-times_config_com_ini[quant_tarefas estimulo aleatoria energia_uav quant_uavs x y lista_inicial_tarefas lista_ini_uav]
+
+  let times 0
+  
+  ;let list-energia []                  ;; Energia -- nao eh mais usada. Estamos apresentando apenas o tempo
+
+  let list-tempo []                    ;; Quantidade de ticks
+  let list-quant-tarefas-concluidas [] ;; Quantidade de tarefas realizadas
+  let list-quant-mensagens []          ;; Quantidade de mensagens trocadas
+  let list-total-qualidade []          ;; Qualidade das tarefas concluídas
+  ;let list-custo-tempo[]               ;; Tempo total gasto no algoritmo de alocação de tarefa.
+  let list-recompensas[]               ;; Lista de recompesa total de cada execução
+
+  let list-quant-agentes-ociosos []    ;; Quantidade de agentes ociosos
+  ;; Agentes ociosos
+  ;let count-agentes-ociosos 0
+  ;let count-runs-agentes-ociosos 0
+  
+  ;let list-ttc [] ;; ticks / tarefas concluídas
+  let list-tempo-porcent []
+  let list-concluidas-porcent []
+  
+  ;; tempo (em milisegundos) de execução da função aloca
+  let list-ms-aloca []
+  let list-call-aloca []
+
+
+  ;; Quantidades de tarefas sem fazer... acho que não precisa.... pois tem as tarefas feitas...
+  let count-runs-taks-sem-fazer 0
+  let count-taks-sem-fazer 0
+  
+  let total-task-alocada-nao-feita 0
+  
+  repeat n-runs [
+    set times (times + 1)
+
+    setup_configurado quant_tarefas estimulo aleatoria energia_uav quant_uavs x y lista_inicial_tarefas lista_ini_uav
+    ;setup
+
+    set terminou false
+
+    ;; Profiler
+    ;profiler:reset 
+    profiler:start 
+    while [not terminou][go] ; para fazer o forever (configurado no botão)
+    profiler:stop
+    ;print profiler:report
+    set list-ms-aloca lput profiler:inclusive-time "aloca" list-ms-aloca
+    set list-call-aloca lput profiler:calls "aloca" list-call-aloca
+    
+    ;print profiler:inclusive-time "aloca"
+    profiler:reset 
+    
+    ;; RECOMPENSA:
+    let recompensaTotal 0
+    ask  tasks[
+      set recompensaTotal (recompensaTotal + recompensa)
+    ]   
+    ;print word "recompensas (kij): " recompensaTotal
+    set list-recompensas lput recompensaTotal list-recompensas
+    
+    ;; Contagem de energia (soma das energias gasta por cada agente até a ultima tarefa realizada por ele
+    ;let energia-gasta 0
+    ;ask uavs [  
+    ;  set energia-gasta (energia-gasta + rc-last-completed-task)
+    ;]
+    ;set list-energia lput energia-gasta list-energia
+    ;print list-energia
+
+    ;; Contagem de tempo
+    set list-tempo lput ticks list-tempo
+    set list-tempo-porcent lput (ticks / energia_uav) list-tempo-porcent ;; normalizado
+    ;set list-tempo-porcent lput (ticks / energia_uav * 100) list-tempo-porcent
+    
+    ;; Contagem de execuções com agenetes OCIOSOS
+    ;if (count uavs with [length completedTasks = 0] > 0) [
+    ;  set count-runs-agentes-ociosos (count-runs-agentes-ociosos + 1)
+    ;]
+    ;set count-agentes-ociosos (count-agentes-ociosos + count uavs with [length completedTasks = 0])
+    set list-quant-agentes-ociosos lput count uavs with [length completedTasks = 0] list-quant-agentes-ociosos
+
+    ;; Quantidade de execuções que tiveram tarefas sem fazer
+    if ( count tasks with [completed = false] > 0) [
+      set count-runs-taks-sem-fazer (count-runs-taks-sem-fazer + 1)
+    ]
+    
+    ;; Tarefas sem fazer
+    set count-taks-sem-fazer (count-taks-sem-fazer + count tasks with [completed = false])
+    
+    ;; Contagem tarefas feitas
+    let quant-tarefa-concluidas count tasks with [completed = true]
+    set list-quant-tarefas-concluidas lput quant-tarefa-concluidas list-quant-tarefas-concluidas
+    
+    set list-concluidas-porcent lput (quant-tarefa-concluidas / quant_tarefas) list-concluidas-porcent ;; normalizado
+    ;set list-concluidas-porcent lput (quant-tarefa-concluidas / quant_tarefas * 100) list-concluidas-porcent
+
+    ;let ttc ticks
+    ;if quant-tarefa-concluidas > 0 [
+    ;  set ttc (ticks / quant-tarefa-concluidas)]
+    ;set list-ttc lput ttc list-ttc
+    
+    ;; Contagem de tarefas alocadas e não concluidas...    
+    let quant-tarefas-alocadas count tasks with [responsibleAgent != false]
+
+    ;if count tasks with [responsibleAgent != false and completed = false] > 0 [
+    ;   print_relatorio_aloc_nao_conc
+    ;]
+
+    set total-task-alocada-nao-feita (total-task-alocada-nao-feita + (quant-tarefas-alocadas - quant-tarefa-concluidas))
+    
+    ;; Contagem de comunicação
+    set list-quant-mensagens lput count-cominicacao list-quant-mensagens
+    
+    ;; Total de qualidade de uma única execução
+    ;; A qualidade será somente um somatório.. ou será média de qualidade das tarefas feitas?
+    let total-qualidade-exec 0
+
+    ;print "Tarefas concluídas:"
+    ask tasks with [completed = true][
+      let qualidade compute_quality responsibleAgent a
+      set total-qualidade-exec (total-qualidade-exec + qualidade)
+    ]
+    
+    ifelse quant-tarefa-concluidas = 0 [
+      set total-qualidade-exec 0
+    ][
+      set total-qualidade-exec (total-qualidade-exec / quant-tarefa-concluidas)
+    ]
+    
+    set list-total-qualidade lput total-qualidade-exec list-total-qualidade
+    
+    ;; Tempo total gasto no algoritmo de alocação de tarefas:
+    ;set list-custo-tempo lput timer_custo list-custo-tempo
+    
+    ;print ""
+  ]
+  
+  print "Resultados nao tratados:"
+  print word "Tempo: " list-tempo
+  print word "       soma: " precision sum list-tempo 4
+  print word "       mean: " precision mean list-tempo 4
+   
+  print word "tarefas concluidas: " list-quant-tarefas-concluidas
+  print word "       soma: " precision sum list-quant-tarefas-concluidas 4
+  print word "       mean: " precision mean list-quant-tarefas-concluidas 4
+  
+  print word "quant mensagens: " list-quant-mensagens
+  print word "       soma: " precision sum list-quant-mensagens 4
+  print word "       mean: " precision mean list-quant-mensagens 4
+  
+  print word "qualidade: " list-total-qualidade
+  print word "       soma: " precision sum list-total-qualidade 4
+  print word "       mean: " precision mean list-total-qualidade 4
+  
+  print word "runtime: " list-ms-aloca
+  print word "       soma: " precision sum list-ms-aloca 4
+  print word "       mean: " precision mean list-ms-aloca 4
+
+  print word "quant execucao: " list-call-aloca
+  print word "       soma: " precision sum list-call-aloca 4
+  print word "       mean: " precision mean list-call-aloca 4
+  
+  print word "agentes ociosos: " list-quant-agentes-ociosos
+  print word "       soma: " precision sum list-quant-agentes-ociosos 4
+  print word "       mean: " precision mean list-quant-agentes-ociosos 4
+  
+  print word "reconpensas: " list-recompensas
+  print word "       soma: " precision sum list-recompensas 4
+  print word "       mean: " precision mean list-recompensas 4
+  
+  ;;--------------
+
+  print ""
+  print_t
+
+  ;;print_cabecalho
+  ;;print_amostras list-tempo list-energia list-quant-tarefas-concluidas list-total-qualidade list-quant-mensagens   
+
+  
+  let media-tempo-porc precision mean list-tempo-porcent 4
+  let desvio-tempo-porc precision standard-deviation list-tempo-porcent 4
+
+  let media-tempo precision mean list-tempo 4
+  let desvio-tempo precision standard-deviation list-tempo 4
+  
+  let media-concluidas-porc precision mean list-concluidas-porcent 4
+  let desvio-concluidas-porc precision standard-deviation list-concluidas-porcent 4
+
+  let media-concluidas precision mean list-quant-tarefas-concluidas 4
+  let desvio-concluidas precision standard-deviation list-quant-tarefas-concluidas 4
+
+  
+  let media-qualidade precision mean list-total-qualidade 4
+  let desvio-qualidade precision standard-deviation list-total-qualidade 4
+  
+  let media-msg precision mean list-quant-mensagens 4
+  let desvio-msg precision standard-deviation list-quant-mensagens 4
+
+  ;let media-energia precision mean list-energia 2
+  ;let desvio-energia precision standard-deviation list-energia 2
+  
+  let media-ociosos precision mean list-quant-agentes-ociosos 4
+  let desvio-ociosos precision standard-deviation list-quant-agentes-ociosos 4
+  
+  ;let media-custo-tempo precision mean list-custo-tempo 2
+  ;let desvio-custo-tempo precision standard-deviation list-custo-tempo 2
+  
+  
+  let media-ttc precision (media-tempo / media-concluidas) 4
+  let media-tmtc precision ( (media-tempo + media-msg) / media-concluidas) 4
+
+  ;print ""
+  ;print "----- Agentes ociosos:"
+  ;print (word "Quantidade total de agentes ociosos: " count-agentes-ociosos)
+  ;print (word "Quantidade de execuções que agentes ficar ociosos: " count-runs-agentes-ociosos)
+  
+  
+  ;print word "Porcentagem tempo: " precision (media-tempo / energia_uav * 100) 2
+  ;print media-tempo-porc
+  ;print word "Porcentagem concluidas: " precision (media-concluidas / quant_tarefas * 100) 2
+  ;print media-concluidas-porc
+  
+  
+  ;let es [s] of one-of tasks
+  let es remove-duplicates [s] of tasks
+
+  ;;print "Custo computacional:"
+  ;;print list-ms-aloca 
+  
+  let media-custo-comp precision mean list-ms-aloca 4
+  let desvio-custo-comp precision standard-deviation list-ms-aloca 4
+  
+  let media-call-aloca precision mean list-call-aloca 4
+  let desvio-call-aloca precision standard-deviation list-call-aloca 4
+  
+
+  ;;print word "Média: " media-custo-comp
+  ;;print word "Desvio padrão: " desvio-custo-comp
+  
+  let media-recompensa precision mean list-recompensas 4
+  let devio-recompensa precision standard-deviation list-recompensas 4
+
+  
+  
+  print (word  es "       "
+               media-ttc      "    "  media-tmtc "        " 
+               media-tempo-porc      "    " desvio-tempo-porc "        " 
+               ;media-tempo      "    " desvio-tempo "        " 
+               media-concluidas-porc "    " desvio-concluidas-porc "        " 
+               ;media-concluidas "    " desvio-concluidas "        " 
+               media-qualidade  "    " desvio-qualidade "        " 
+               media-msg        "    " desvio-msg "            " 
+               media-ociosos    "    " desvio-ociosos "        " 
+               media-custo-comp    "    " desvio-custo-comp "             " 
+               media-recompensa    "    " devio-recompensa "             " 
+               )    
+  
+  ;print "Chamadas a aloca: "
+  ;print word "Média: " media-call-aloca
+  ;print word "Desvio padrão: " desvio-call-aloca
+  
+  
+  ;print log_run
+  ;print ""
+  ;print word "Tarefas Alocadas e não concluiídas: " total-task-alocada-nao-feita
+  if total-task-alocada-nao-feita > 0 [
+    print ""
+    print "REFAZER O TESTE !!!!"
+    print ""
+
+
+    
+    
+    
+  ]
+end
+
+;; --------------------------------------------------
+;; ------FIM Execuções sequenciais ------------------
+;; --------------------------------------------------
+to print_amostras[list-tempo list-energia list-quant-tarefas-concluidas list-total-qualidade list-quant-mensagens ]
+
+  print ""
+  print word "Amostra tempo (ticks): " list-tempo
+  print word "Min: " min list-tempo
+  print word "Média: " mean list-tempo
+  print word "Max: " max list-tempo
+  print word "Variancia: " variance list-tempo
+  print word "Desvio padrão: " standard-deviation list-tempo
+  
+
+  ;print ""
+  ;print word "Amostra Energia: " list-energia
+  ;print word "Min: " min list-energia
+  ;print word "Média: " mean list-energia
+  ;print word "Max: " max list-energia
+  ;print word "Variancia: " variance list-energia
+  ;print word "Desvio padrão: " standard-deviation list-energia
+  
+  print ""
+  print "----- Quantidade de tarefas concluídas:"
+  print word "Amostra: "   list-quant-tarefas-concluidas
+  print word "Min: "       min list-quant-tarefas-concluidas
+  print word "Média: "     precision mean list-quant-tarefas-concluidas 2
+  print word "Max: "       max list-quant-tarefas-concluidas
+  print word "Variancia: " variance list-quant-tarefas-concluidas
+  print word "Desvio padrão: " standard-deviation list-quant-tarefas-concluidas
+  
+  ;print ""
+  ;print "-----Qualidade:"
+  ;print word "Amostra: "   list-total-qualidade
+  ;print word "Min: "       min list-total-qualidade
+  ;print word "Média: "     precision mean list-total-qualidade 2
+  ;print word "Max: "       max list-total-qualidade
+  ;print word "Variancia: " variance list-total-qualidade
+  ;print word "Desvio padrão: " standard-deviation list-total-qualidade
+
+  ;print ""
+  ;print "----- Quantidade de mensagens trocadas - considerar quando NÃO tem loop"
+  ;print word "Amostra: "       list-quant-mensagens
+  ;print word "Min: "           min list-quant-mensagens
+  ;print word "Média: "         precision mean list-quant-mensagens 2
+  ;print word "Max: "           max list-quant-mensagens
+  ;print word "Variancia: "     variance list-quant-mensagens
+  ;print word "Desvio padrão: " standard-deviation list-quant-mensagens
+end
+
+to report-final
+  ;print_relatoria_final
+end
+
+to print_relatoria_final
+  print "Relatório:"
+
+  ;; Contagem de energia (soma das energias gasta por cada agente até a ultima tarefa realizada por ele
+  let energia-gasta 0
+  ;ask uavs [  
+    ;show rc-last-completed-task
+    ;set energia-gasta (energia-gasta + rc-last-completed-task)
+  ;]
+  
+  print word "ENERGIA GASTA: " energia-gasta
+  ;print word "ENERGIA GASTA (contabiliza todos até a realização da ultima tarefa): " (ticks * count uavs)
+
+  print word "Tempo total de execução decorrido: " ticks
+  ;print word "Tempo até a realização da última tarefa: " ticks-last-completed-task
+  
+  let quant-tarefas-alocadas count tasks with [responsibleAgent != false]
+  
+  print word "Tarefas alocadas e não concluídas:" (quant-tarefas-alocadas - count tasks with [completed = true])
+  
+  
+  print word "Quantidade de tarefas NãO concluídas: " count tasks with [completed = false]
+  print word "Quantidade de tarefas CONCLUÍDAS: "     count tasks with [completed = true]
+  
+  print word "Vants que ficaram ociosos: " count uavs with [length completedTasks = 0]
+  
+  print word "Quantidade de mensagens trocadas: " count-cominicacao
+  ;print word "Quantidade de mensagens trocadas até última alocação feita: " count-comunic-com-locacao ;; até a ultmia alocação de tarefas feitas
+
+  ;print word "Quantidade de tarefas NÃO alocadas: " count tasks with [responsibleAgent = false]
+  ;print word "Quantidade de tarefas alocadas: "     count tasks with [responsibleAgent != false]
+  ;print word "Quantidade de tarefas alocadas e não concluída: " count tasks with [responsibleAgent != false and completed = false]
+  ;print word "Quantidade de tarefas alocadas e concluída: "     count tasks with [responsibleAgent != false and completed = true]
+
+  ;ask uavs [
+  ;  show word "Quantidade de tarefas feitas: " length completedTasks
+  ;]
+
+end
+
+;; Relatório de tarefas que foram alocadas e não concluídas.
+to print_relatorio_aloc_nao_conc
+  print ""
+  let quant-tarefas-alocadas count tasks with [responsibleAgent != false]
+  let quant-tarefa-concluidas count tasks with [completed = true]
+  print word "Tarefas alocadas e não concluídas:" (quant-tarefas-alocadas - quant-tarefa-concluidas)
+  print (word "Tarefas concluidas: " quant-tarefa-concluidas)
+  print (word "Tarefas alocadas: " quant-tarefas-alocadas)
+
+  ask tasks with [responsibleAgent != false and completed = false][
+    print " "
+    print word "Tarefa: " self
+    print word "Agente: " responsibleAgent
+    print word "Energia final: " [resource] of responsibleAgent
+    print word "Energia estimada: " [estimated_cost] of responsibleAgent
+  ]
+  print ""
+  ;print log_run
+end
+
+;; ----------------------------------------------------------
+;;      Impressão de cabeçalhos de relatório de execução
+;; ----------------------------------------------------------
+to print_cabecalho
+  print ""
+  print "----------------------------------------"
+  print (word "RELATÓRIO FINAL DE " n-runs " EXECUÇÕES: ")
+  print (word "Algoritmo: " nome-algoritmo)
+  print ""
+  print (word "Estimulos: " [s] of tasks)
+  print (word "Quantidade de tarefas: " count tasks)
+  print (word "Quantidade de vants: " count uavs)
+  print "-------------------------------------------------------------------"
+  print "Para tabular: "
+  print ""
+  print_t
+end
+
+to print_t
+
+  print "# estimulo    t/tc      t+m/tc                tempo        tarefas_concluídas     qualidade        mensagens_trocadas    agentes ociosos   custo comp             recompensa "
+  print "#             média     média             média | desvio     média | desvio     média | desvio     média | desvio     média | desvio     média | desvio        média | desvio"
+end  
+
+to print_cabecalho_inicial
+  print "# "
+  print "# ----------------------------------------"
+  print (word "# RELATÓRIO FINAL DE " n-runs " EXECUÇÕES: ")
+end
+
+to print_cabecalho_por_cenario[nt na energia_uav]
+  print "# "
+  print (word "# Algoritmo: " nome-algoritmo)
+  print (word "# Quantidade de tarefas: " nt)
+  print (word "# Quantidade de vants: " na)
+  print (word "# Quantidade energia cada uav: " energia_uav)
+  print "# -------------------------------------------------------------------"
+  ;print_t
+end
+
+

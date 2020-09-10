@@ -1,0 +1,71 @@
+;; ------------------------------------------------------
+;; Método para alocar tarefa para o agente
+;; ------------------------------------------------------
+to allocate [i j consumo kij]
+  
+  ;set log_run (word log_run "\n tick: " ticks " agente " i " alocou tarefa " j " consumo estimado: " consumo " rc da tarefa: " [rc] of j " r atual: " [resource] of i " re: " [estimated_cost] of i)
+  ;set log_run (word log_run "\n distancia calculada: " compute_distance i j " - posicao agente onde está para ir fazer a tarefa: [" [lastX] of i " , " [lastY] of i  "] \n")
+
+  ask j[
+    set responsibleAgent i
+    set rc_estimado consumo
+    ;if recompensa > 0 [print "tarefa ja alocada"]
+    set recompensa kij
+  ]
+
+  ask i [
+    set estimated_cost (estimated_cost + consumo) ;; Marcar gasto de recurso previsto... pois não posso já reduzir do recurso
+    set tasksToDo lput j tasksToDo ;; adicionar Tarefa a fazer
+    set lastX [xcor] of j
+    set lastY [ycor] of j
+  ]
+
+  ask i [ create-link-with j ] ;; fazer link para mostrar
+end
+
+
+;; ------------------------------------------------------
+;; ---------- Cálculo da qualidade ----------------------
+;; ------------------------------------------------------
+to-report compute_quality[i type_target]
+  let maxQia 0
+
+  ask i[
+    foreach sensors[
+       let qia item type_target (item ? quality-sensors)
+       if qia > maxQia [set maxQia qia]
+    ]
+  ]
+
+  report maxQia
+end
+
+
+;; ------------------------------------------------------
+;; ---------- Cálculo da distância ----------------------
+;; ------------------------------------------------------
+;; Calcular distância.
+;; Quando existem tarefas para fazer
+;; a posição do agente precisa ser calculada com base na ultima tarefa alocada para ser realizada
+;; O agente sempre fará as tarefas em ordem de agendamento
+to-report compute_distance[i j]
+  let dist_i_j 0
+  
+  ask j [
+    set dist_i_j round (distancexy ([lastX] of i) ([lastY] of i)) ;; distancia da tarefa j com a posicao do agente i
+  ]
+
+  set dist_i_j dist_i_j + 1 ; add custo de virar em direção ha tarefa no cálculo da distancia..
+
+  ;; se o agente já tem tarefa agendada ou ele está fazendo alguma, ele não pode contar com a energia atual
+  ;; Isso interfere na hora do agente decidir se tem energia suficiente para fazer a tarefa.
+  ;; mas no calculo da capacidade não interfere, pois se for aumente 1 de custo aumenta para todas as tarefa
+  
+  ask i[
+    if not empty? tasksToDo or taskDoing != 0[
+      set dist_i_j dist_i_j + 1
+    ]
+  ]
+    
+  report dist_i_j
+end
